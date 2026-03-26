@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import mongoose, { Schema, Document } from "mongoose";
 
 export enum Role {
@@ -36,6 +37,19 @@ const UserSchema: Schema<IUser> = new Schema({
         default: Date.now
     }
 });
+
+UserSchema.pre<IUser>('save', async function(next) {
+    if(!this.isModified('password')){
+        return next();
+    }
+
+    this.password = await bcrypt.hash(this.password, 12);
+    next();
+});
+
+UserSchema.methods.isPasswordCorrect = async function(password: string): Promise<boolean> {
+    return await bcrypt.compare(password, this.password);
+};
 
 const User = mongoose.model<IUser>('User', UserSchema);
 
