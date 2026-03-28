@@ -1,10 +1,14 @@
 import { ApiError } from "../utils/ApiError.js";
 import { Request, Response, NextFunction } from "express";
+import { ZodError } from "zod";
 
 const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
     let error = err;
 
-    if(!(error instanceof ApiError)){
+    if(error instanceof ZodError){
+        const extractedErrors = error.errors.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+        error = new ApiError(400, "Validation Failed", extractedErrors);
+    } else if(!(error instanceof ApiError)){
         const statusCode = error.statusCode || 500;
         const message = error.message || "Something went wrong";
         error = new ApiError(statusCode, message, error?.errors || [],err.stack )
