@@ -10,10 +10,10 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
     const { username, email, password, role } = validateData;
 
     const isDuplicate = await User.findOne({
-        $or: [{email}]
+        $or: [{ email }]
     });
 
-    if(isDuplicate){
+    if (isDuplicate) {
         throw new ApiError(409, "User with email already exist.")
     };
 
@@ -25,9 +25,9 @@ const registerUser = asyncHandler(async (req: Request, res: Response) => {
         createdAt: Date.now()
     });
 
-    const createdUser = await User.findById(user._id).select("-password");
+    const createdUser = await User.findById(user._id).select("-password -refresh_token");
 
-    if(!createdUser){
+    if (!createdUser) {
         throw new ApiError(500, "Something went wrong while registering the user.")
     };
 
@@ -61,15 +61,44 @@ const loginUser = asyncHandler(async (req: Request, res: Response) => {
         throw new ApiError(401, "Password is incorrect.");
     };
 
+    const access_token = user.generateAccessToken();
+    const refresh_token = user.generateRefreshToken();
+
+    if (!access_token || !refresh_token) {
+        throw new ApiError(500, "Something went wrong while generating access and refresh tokens.")
+    }
+
+    user.refresh_token = refresh_token;
+
+    await user.save({ validateBeforeSave: false });
+
+    const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+    }
+
     const userResponse = user.toObject();
     delete (userResponse as any).password;
+    delete (userResponse as any).refresh_token;
 
-    return res.status(200).json(
-        new ApiResponse(200, userResponse, "User logged in successfully.")
-    );
+    return res
+        .status(200)
+        .cookie("accessToken", access_token, options)
+        .cookie("refreshToken", refresh_token, options)
+        .json(
+            new ApiResponse(
+                200,
+                {
+                    userResponse,
+                    access_token,
+                    refresh_token
+                },
+                "User logged in successfully."
+            )
+        );
 });
 
-export{
+export {
     registerUser,
     loginUser
 }
