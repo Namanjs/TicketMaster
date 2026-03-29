@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { Role } from '../models/user.model.js';
 
 const loginSchema = z.object({
     email: z.string().optional(),
@@ -19,7 +18,7 @@ const registerSchema = z.object({
     password: z
     .string()
     .min(8, "Password must be atleast 8 characters long."),
-    role: z.enum([Role.BUYER, Role.ORGANIZER])
+    role: z.enum(['BUYER', 'ORGANIZER'])
 });
 
 type register = z.infer<typeof registerSchema>
