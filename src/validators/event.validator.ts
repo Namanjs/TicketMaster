@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { z } from 'zod';
 
 const createEventSchema = z.object({
@@ -9,7 +10,20 @@ const createEventSchema = z.object({
 
 type create_Event = z.infer<typeof createEventSchema>
 
+const eventIdFromParamsSchema = z.object({
+    eventId: z.string().refine((val) => 
+        mongoose.Types.ObjectId.isValid(val),
+        {
+            message: "Invalid MongoDB ObjectId."
+        }
+    )
+});
+
+type IdParam = z.infer<typeof eventIdFromParamsSchema>;
+
 export {
     create_Event,
-    createEventSchema
+    createEventSchema,
+    IdParam,
+    eventIdFromParamsSchema
 }
