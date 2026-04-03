@@ -12,6 +12,7 @@ export interface ITicket extends Document {
     ticketCode: string,
     purchasePrice: number,
     status: Status,
+    idempotencyKey: string,
     createdAt?: Date
 }
 
@@ -38,6 +39,10 @@ const TicketSchema: Schema<ITicket> = new Schema({
         type: String,
         enum: Object.values(Status),
         default: Status.VALID 
+    },
+    idempotencyKey: {
+        type: String,
+        unique: true
     },
     createdAt: {
         type: Date,
