@@ -7,7 +7,7 @@ import Event from "../models/event.model.js";
 import Ticket, { Status } from "../models/ticket.model.js";
 import { buyTicketSchema, BuyTicketSchema } from "../validators/ticket.validators.js";
 
-export const buyTicket = asyncHandler(async (req: Request, res: Response) => {
+const buyTicket = asyncHandler(async (req: Request, res: Response) => {
     const validateData: BuyTicketSchema = await buyTicketSchema.parseAsync(req.body);
     const { eventId, idempotencyKey } = validateData;
     const userId = req.user?._id;
@@ -76,3 +76,24 @@ export const buyTicket = asyncHandler(async (req: Request, res: Response) => {
         session.endSession()
     }
 });
+
+const getUserTickets = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.user._id;
+
+    if(!userId) {
+        throw new ApiError(401, "Unauthorized");
+    }
+
+    const tickets = await Ticket.find({
+        userId: userId
+    }).populate("eventId", "name date").sort({ createdAt: -1 });
+
+    return res.status(200).json(
+        new ApiResponse(200, tickets, "User tickets fetched successfully.")
+    );
+});
+
+export{ 
+    buyTicket,
+    getUserTickets
+};

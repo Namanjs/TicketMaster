@@ -3,6 +3,7 @@ import cors from 'cors';
 import { errorHandler } from './middlewares/error.middleware.js';
 import userRoutes from './routes/user.routes.js';
 import eventRoutes from './routes/event.routes.js';
+import ticketRoutes from './routes/ticket.routes.js';
 import cookieParser from 'cookie-parser';
 
 export const app = express();
@@ -25,5 +26,7 @@ app.get('/', (req: Request, res: Response): void => {
 app.use("/api/v1/users",userRoutes);
 
 app.use("/api/v1/events",eventRoutes);
+
+app.use("/api/v1/tickets",ticketRoutes);
 
 app.use(errorHandler);
